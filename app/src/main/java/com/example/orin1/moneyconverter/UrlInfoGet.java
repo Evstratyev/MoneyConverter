@@ -1,10 +1,7 @@
 package com.example.orin1.moneyconverter;
 
 import android.os.AsyncTask;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.widget.ProgressBar;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -15,17 +12,17 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
 public class UrlInfoGet extends AsyncTask<Void, Void, List<Currency>> {
 
     private String resultJson = "";
-    private List<Currency> currencyList = new ArrayList<>();
+    private final List<Currency> currencyRatesList = new ArrayList<>();
     private DataLoadedCallback dataLoadedCallback;
     private final String urlStr = "https://exchangeratesapi.io/api/latest";
+    private final List<String> currencyNameList = new ArrayList<>();
+
 
 
     public UrlInfoGet(DataLoadedCallback dataLoadedCallback) {
@@ -53,108 +50,68 @@ public class UrlInfoGet extends AsyncTask<Void, Void, List<Currency>> {
 
             resultJson = buffer.toString();
 
+            Log.i("Json", resultJson);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        Log.i("loaded", "_____________________5");
-
-//        dataLoadedCallback.onDataloadedCallback();
 
         try {
 
             JSONObject dataJsonObj = new JSONObject(resultJson);
             String currency = dataJsonObj.getString("rates");
 
+            currencyNameList(currency);
+
             JSONObject dataJsonObj1 = new JSONObject(currency);
-            String aud = dataJsonObj1.getString("AUD");
-            String czk = dataJsonObj1.getString("CZK");
-            String gbp = dataJsonObj1.getString("GBP");
-            String usd = dataJsonObj1.getString("USD");
-            String rub = dataJsonObj1.getString("RUB");
 
-            String jpy = dataJsonObj1.getString("JPY");
-            String bgn = dataJsonObj1.getString("BGN");
-            String chf = dataJsonObj1.getString("CHF");
-            String ils = dataJsonObj1.getString("ILS");
-            String krw = dataJsonObj1.getString("KRW");
+            for (String currencyJson : currencyNameList){
+                if(!currencyJson.equals("EUR")) {
+                    String s = dataJsonObj1.getString(currencyJson);
+                    currencyRatesList.add(new Currency(currencyJson, Double.valueOf(s)));
+                }
+            }
 
-            currencyList.add(new Currency("AUD", Double.valueOf(aud)));
-            currencyList.add(new Currency("CZK", Double.valueOf(czk)));
-            currencyList.add(new Currency("GBP", Double.valueOf(gbp)));
-            currencyList.add(new Currency("USD", Double.valueOf(usd)));
-            currencyList.add(new Currency("RUB", Double.valueOf(rub)));
+            currencyRatesList.add(new Currency("EUR", 1.0));
 
-            currencyList.add(new Currency("JPY", Double.valueOf(jpy)));
-            currencyList.add(new Currency("BGN", Double.valueOf(bgn)));
-            currencyList.add(new Currency("CHF", Double.valueOf(chf)));
-            currencyList.add(new Currency("ILS", Double.valueOf(ils)));
-            currencyList.add(new Currency("KRW", Double.valueOf(krw)));
+            Collections.sort(currencyRatesList);
 
-            currencyList.add(new Currency("EUR", 1.0));
-
-            Collections.sort(currencyList);
-
-            dataLoadedCallback.onDataloadedCallback();
-
-            Log.i("loaded", "_____________________4");
 
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
+        return currencyRatesList;
 
-        return currencyList;
     }
 
-//    @Override
-//    protected void onPostExecute(String strJson) {
-//        super.onPostExecute(strJson);
-//
-//        try {
-//
-//            JSONObject dataJsonObj = new JSONObject(strJson);
-//            String currency = dataJsonObj.getString("rates");
-//
-//            JSONObject dataJsonObj1 = new JSONObject(currency);
-//            String aud = dataJsonObj1.getString("AUD");
-//            String czk = dataJsonObj1.getString("CZK");
-//            String gbp = dataJsonObj1.getString("GBP");
-//            String usd = dataJsonObj1.getString("USD");
-//            String rub = dataJsonObj1.getString("RUB");
-//
-//            String jpy = dataJsonObj1.getString("JPY");
-//            String bgn = dataJsonObj1.getString("BGN");
-//            String chf = dataJsonObj1.getString("CHF");
-//            String ils = dataJsonObj1.getString("ILS");
-//            String krw = dataJsonObj1.getString("KRW");
-//
-//            currencyList.add(new Currency("AUD", Double.valueOf(aud)));
-//            currencyList.add(new Currency("CZK", Double.valueOf(czk)));
-//            currencyList.add(new Currency("GBP", Double.valueOf(gbp)));
-//            currencyList.add(new Currency("USD", Double.valueOf(usd)));
-//            currencyList.add(new Currency("RUB", Double.valueOf(rub)));
-//
-//            currencyList.add(new Currency("JPY", Double.valueOf(jpy)));
-//            currencyList.add(new Currency("BGN", Double.valueOf(bgn)));
-//            currencyList.add(new Currency("CHF", Double.valueOf(chf)));
-//            currencyList.add(new Currency("ILS", Double.valueOf(ils)));
-//            currencyList.add(new Currency("KRW", Double.valueOf(krw)));
-//
-//            currencyList.add(new Currency("EUR", 1.0));
-//
-//            Collections.sort(currencyList);
-//
-//            dataLoadedCallback.onDataloadedCallback();
-//
-//            Log.i("loaded", "_____________________4");
-//
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-//    }
+    @Override
+    protected void onPostExecute(List<Currency> currencyList) {
+        super.onPostExecute(currencyList);
 
-    public List<Currency> getCurrencyList() {
-        return currencyList;
+        dataLoadedCallback.onDataloadedCallback();
+    }
+
+    public List<Currency> getCurrencyRatesList() {
+        return currencyRatesList;
+    }
+
+    private void currencyNameList(String json){
+
+        String[] words = json.split("[a-z0-9{}.:\",]");
+
+        currencyNameList.add("EUR");
+
+        for(String word : words){
+            if (!word.equals("")& (word.length() == 3)){
+                currencyNameList.add(word);
+            }
+        }
+        Collections.sort(currencyNameList);
+        Log.i("ARR", currencyNameList.toString());
+    }
+
+    public List<String> getCurrencyNameList() {
+        return currencyNameList;
     }
 }
