@@ -20,9 +20,10 @@ public class UrlInfoGet extends AsyncTask<Void, Void, List<Currency>> {
     private String resultJson = "";
     private final List<Currency> currencyRatesList = new ArrayList<>();
     private DataLoadedCallback dataLoadedCallback;
-    private final String urlStr = "https://exchangeratesapi.io/api/latest";
-    private final List<String> currencyNameList = new ArrayList<>();
+    //    private final String urlStr = "https://exchangeratesapi.io/api/latest";
+    private final String urlStr = "https://api.exchangeratesapi.io/latest";
 
+    private final List<String> currencyNameList = new ArrayList<>();
 
 
     public UrlInfoGet(DataLoadedCallback dataLoadedCallback) {
@@ -54,9 +55,13 @@ public class UrlInfoGet extends AsyncTask<Void, Void, List<Currency>> {
 
         } catch (Exception e) {
             e.printStackTrace();
+
+            resultJson = "";
         }
 
         try {
+
+//            Log.i("Json", resultJson);
 
             JSONObject dataJsonObj = new JSONObject(resultJson);
             String currency = dataJsonObj.getString("rates");
@@ -65,8 +70,8 @@ public class UrlInfoGet extends AsyncTask<Void, Void, List<Currency>> {
 
             JSONObject dataJsonObj1 = new JSONObject(currency);
 
-            for (String currencyJson : currencyNameList){
-                if(!currencyJson.equals("EUR")) {
+            for (String currencyJson : currencyNameList) {
+                if (!currencyJson.equals("EUR")) {
                     String s = dataJsonObj1.getString(currencyJson);
                     currencyRatesList.add(new Currency(currencyJson, Double.valueOf(s)));
                 }
@@ -96,14 +101,14 @@ public class UrlInfoGet extends AsyncTask<Void, Void, List<Currency>> {
         return currencyRatesList;
     }
 
-    private void currencyNameList(String json){
+    private void currencyNameList(String json) {
 
         String[] words = json.split("[a-z0-9{}.:\",]");
 
         currencyNameList.add("EUR");
 
-        for(String word : words){
-            if (!word.equals("")& (word.length() == 3)){
+        for (String word : words) {
+            if (!word.equals("") & (word.length() == 3)) {
                 currencyNameList.add(word);
             }
         }
